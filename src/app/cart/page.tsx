@@ -1,11 +1,21 @@
+
 "use client";
 
 import Link from "next/link";
+import posthog from "posthog-js";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/products";
 
 export default function CartPage() {
   const { lines, total, setQuantity, remove } = useCart();
+
+  const handleCheckout = () => {
+    posthog.capture("checkout_started", {
+      cart_total: total,
+      currency: "INR",
+      item_count: lines.reduce((sum, line) => sum + line.quantity, 0),
+    });
+  };
 
   if (!lines.length) {
     return (
@@ -32,27 +42,41 @@ export default function CartPage() {
                 <Link href={`/products/${product.id}`} className="font-medium hover:underline">
                   {product.name}
                 </Link>
-                <p className="text-sm text-muted tabular-nums">{formatPrice(product.price)}</p>
+                <p className="text-sm text-muted tabular-nums">
+                  {formatPrice(product.price)}
+                </p>
               </div>
               <div className="flex items-center rounded-lg border border-border">
-                <button className="px-3 py-1" onClick={() => setQuantity(product.id, quantity - 1)} aria-label="Decrease">
+                <button
+                  className="px-3 py-1"
+                  onClick={() => setQuantity(product.id, quantity - 1)}
+                  aria-label="Decrease"
+                >
                   −
                 </button>
                 <span className="w-8 text-center tabular-nums">{quantity}</span>
-                <button className="px-3 py-1" onClick={() => setQuantity(product.id, quantity + 1)} aria-label="Increase">
+                <button
+                  className="px-3 py-1"
+                  onClick={() => setQuantity(product.id, quantity + 1)}
+                  aria-label="Increase"
+                >
                   +
                 </button>
               </div>
               <span className="w-20 text-right font-medium tabular-nums">
                 {formatPrice(product.price * quantity)}
               </span>
-              <button onClick={() => remove(product.id)} className="text-sm text-muted hover:text-critical">
+              <button
+                onClick={() => remove(product.id)}
+                className="text-sm text-muted hover:text-critical"
+              >
                 Remove
               </button>
             </li>
           ))}
         </ul>
       </section>
+
       <aside className="h-fit rounded-xl border border-border bg-surface p-6">
         <div className="flex justify-between text-lg font-semibold">
           <span>Total</span>
@@ -60,6 +84,7 @@ export default function CartPage() {
         </div>
         <Link
           href="/checkout"
+          onClick={handleCheckout}
           className="mt-6 block rounded-lg bg-accent py-3 text-center font-medium text-white hover:opacity-90"
         >
           Checkout
