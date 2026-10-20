@@ -53,3 +53,4 @@ src/
   app/dashboard/page.tsx      analytics dashboard
 ```
 # ShopPulse
+# shop
