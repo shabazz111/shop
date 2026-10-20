@@ -75,9 +75,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const setQuantity = useCallback(
     (productId: string, quantity: number) => {
       if (quantity <= 0) return remove(productId);
+      const product = getProduct(productId);
+      const added = quantity - (quantities[productId] ?? 0);
       setQuantities((q) => ({ ...q, [productId]: quantity }));
+      // The cart page's "+" button is an add-to-cart too.
+      if (product && added > 0) {
+        track("product_added_to_cart", {
+          product_id: product.id,
+          product_name: product.name,
+          category: product.category,
+          price: product.price,
+          quantity: added,
+          source: "cart_page",
+        });
+      }
     },
-    [remove],
+    [quantities, remove],
   );
 
   const clear = useCallback(() => setQuantities({}), []);

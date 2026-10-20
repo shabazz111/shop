@@ -38,20 +38,42 @@ function localDistinctId() {
  * Sends an event to PostHog (when configured) and mirrors it to a local log so
  * the dashboard still has data to show when PostHog query access isn't set up.
  */
-export function track(event: EventName, properties: Record<string, unknown> = {}) {
+
+export function track(
+  event: EventName,
+  properties: Record<string, unknown> = {},
+) {
   if (typeof window === "undefined") return;
 
-  // PostHog captures $pageview automatically; only the local mirror needs it here.
-  if (posthogEnabled && event !== "$pageview") posthog.capture(event, properties);
+  if (event !== "$pageview") {
+    if (posthogEnabled && posthog.__loaded) {
+      posthog.capture(event, properties);
+      console.log("[PostHog] Event sent:", event, properties);
+    } else {
+      console.warn("[PostHog] Not initialized; event not sent:", event, {
+        enabled: posthogEnabled,
+        loaded: posthog.__loaded,
+      });
+    }
+  }
 
   try {
     const log = readLocalEvents();
-    log.push({ event, distinct_id: localDistinctId(), timestamp: new Date().toISOString(), properties });
-    localStorage.setItem(LOG_KEY, JSON.stringify(log.slice(-MAX_LOCAL_EVENTS)));
+    log.push({
+      event,
+      distinct_id: localDistinctId(),
+      timestamp: new Date().toISOString(),
+      properties,
+    });
+    localStorage.setItem(
+      LOG_KEY,
+      JSON.stringify(log.slice(-MAX_LOCAL_EVENTS)),
+    );
   } catch {
-    // Storage can be full or blocked; analytics must never break the store.
+    // Analytics must never break the store.
   }
 }
+
 
 export function identify(email: string, name: string) {
   if (posthogEnabled) posthog.identify(email, { email, name });

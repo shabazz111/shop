@@ -13,17 +13,23 @@ export function ProductActions({ productId }: { productId: string }) {
 
   const viewed = useRef<string | null>(null);
 
-  useEffect(() => {
-    // Guard against the dev-mode double effect run so each view is counted once.
-    if (viewed.current === product.id) return;
-    viewed.current = product.id;
-    track("product_viewed", {
-      product_id: product.id,
-      product_name: product.name,
-      category: product.category,
-      price: product.price,
-    });
-  }, [product]);
+useEffect(() => {
+  if (viewed.current === product.id) return;
+
+  viewed.current = product.id;
+
+  track("product_viewed", {
+    product_id: product.id,
+    product_name: product.name,
+    category: product.category,
+    price: product.price,
+  });
+}, [
+  product.id,
+  product.name,
+  product.category,
+  product.price,
+]);
 
   return (
     <div className="mt-4 flex items-center gap-4">

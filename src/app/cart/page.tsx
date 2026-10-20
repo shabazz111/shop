@@ -2,20 +2,11 @@
 "use client";
 
 import Link from "next/link";
-import posthog from "posthog-js";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/products";
 
 export default function CartPage() {
   const { lines, total, setQuantity, remove } = useCart();
-
-  const handleCheckout = () => {
-    posthog.capture("checkout_started", {
-      cart_total: total,
-      currency: "INR",
-      item_count: lines.reduce((sum, line) => sum + line.quantity, 0),
-    });
-  };
 
   if (!lines.length) {
     return (
@@ -84,7 +75,6 @@ export default function CartPage() {
         </div>
         <Link
           href="/checkout"
-          onClick={handleCheckout}
           className="mt-6 block rounded-lg bg-accent py-3 text-center font-medium text-white hover:opacity-90"
         >
           Checkout
